@@ -6,58 +6,78 @@ const contactsPath = path.join(__dirname, "contacts.json");
 const users = require("./contacts.json");
 
 const listContacts = async () => {
-  return users;
+  try {
+    return users;
+  } catch (error) {
+    console.log(error.toString());
+  }
 };
 const getContactById = async (contactId) => {
-  const contact = users.find((el) => el.id === contactId);
-  return contact;
+  try {
+    const contact = users.find((el) => el.id === contactId);
+    return contact;
+  } catch (error) {
+    console.log(error.toString());
+  }
 };
 
 const removeContact = async (contactId) => {
-  const contact = users.filter((el) => el.id !== contactId);
-  await saveContactsToFile(contact);
-  return contact;
+  try {
+    const contact = users.filter((el) => el.id !== contactId);
+    await saveContactsToFile(contact);
+    return contact;
+  } catch (error) {
+    console.log(error.toString());
+  }
 };
 
 const addContact = async (body) => {
-  const { name, email, phone } = body;
+  try {
+    const { name, email, phone } = body;
 
-  if (!name || !email || !phone) {
-    throw new Error("missing required fields");
+    if (!name || !email || !phone) {
+      throw new Error("missing required fields");
+    }
+
+    const newContact = {
+      id: Date.now().toString(),
+      name,
+      email,
+      phone,
+    };
+
+    users.push(newContact);
+    await saveContactsToFile(users);
+
+    return newContact;
+  } catch (error) {
+    console.log(error.toString());
   }
-
-  const newContact = {
-    id: Date.now().toString(),
-    name,
-    email,
-    phone,
-  };
-
-  users.push(newContact);
-  await saveContactsToFile(users);
-
-  return newContact;
 };
 
 const updateContact = async (contactId, body) => {
-  const { name, email, phone } = body;
+  try {
+    const { name, email, phone } = body;
 
-  const contactIndex = users.findIndex((el) => el.id === contactId);
+    const contactIndex = users.findIndex((el) => el.id === contactId);
 
-  if (contactIndex === -1) {
-    return null;
+    if (contactIndex === -1) {
+      return null;
+    }
+    users[contactIndex] = {
+      ...users[contactIndex],
+      id: contactId,
+      name,
+      email,
+      phone,
+    };
+
+    await saveContactsToFile(users);
+
+    return users[contactIndex];
+  } catch (error) {
+    console.log(error.toString());
   }
-  users[contactIndex] = {
-    ...users[contactIndex],
-    id: contactId,
-    name,
-    email,
-    phone,
-  };
-
-  await saveContactsToFile(users);
-
-  return users[contactIndex];
 };
 
 function saveContactsToFile(contacts) {
