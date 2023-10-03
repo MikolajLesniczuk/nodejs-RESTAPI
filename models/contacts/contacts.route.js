@@ -4,6 +4,7 @@ const contactSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().email().required(),
   phone: Joi.string().required(),
+  favorite: Joi.boolean(),
 });
 
 const {
@@ -12,15 +13,21 @@ const {
   removeContact,
   addContact,
   updateContact,
-} = require("../../models/contacts");
+  updateStatusContact,
+} = require("./contacts.servi");
 
 const express = require("express");
 
 const router = express.Router();
 
 router.get("/", async (req, res, next) => {
-  const list = await listContacts();
-  res.send(list);
+  try {
+    const contacts = await listContacts();
+    res.json(contacts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 router.get("/:contactId", async (req, res, next) => {
@@ -85,6 +92,28 @@ router.put("/:contactId", async (req, res, next) => {
   }
 
   res.status(200).json(updatedContact);
+});
+
+router.patch("/:contactId/favorite", async (req, res, next) => {
+  const { contactId } = req.params;
+  const { favorite } = req.body;
+
+  if (favorite === undefined) {
+    return res.status(400).json({ message: "missing field favorite" });
+  }
+
+  try {
+    const updatedContact = await updateStatusContact(contactId, favorite);
+
+    if (updatedContact) {
+      res.status(200).json(updatedContact);
+    } else {
+      res.status(404).json({ message: "Not found" });
+    }
+  } catch (error) {
+    console.error("Error updating contact:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 module.exports = router;
