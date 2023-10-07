@@ -6,6 +6,8 @@ const mimeTypes = require("mime-types");
 const path = require("path");
 const jimp = require("jimp");
 
+const hello = "initial commit";
+
 const uploadAvatar = async (req, res) => {
   try {
     const userToken = req.body.token;
