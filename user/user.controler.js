@@ -1,5 +1,56 @@
-const User = require("../user/user.model");
+const User = require("./user.model");
 const jwt = require("jsonwebtoken");
+const fs = require("fs/promises");
+const gravatar = require("gravatar");
+const mimeTypes = require("mime-types");
+const path = require("path");
+const jimp = require("jimp");
+
+const uploadAvatar = async (req, res) => {
+  try {
+    const userToken = req.body.token;
+
+    if (!userToken) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    const filename = `${Date.now()}.${mimeTypes.extension(req.file.mimetype)}`;
+
+    const avatarImage = await jimp.read(req.file.path);
+    await avatarImage.resize(250, 250).writeAsync(req.file.path);
+
+    await fs.rename(
+      req.file.path,
+      path.join(__dirname, "../public/avatars", filename)
+    );
+
+    const avatarURL = `http://localhost:3000/avatars/${filename}`;
+
+    const updatedUser = await User.findOneAndUpdate(
+      { token: userToken },
+      { avatarURL },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ avatarURL });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).send();
+  }
+};
+
+const getUsers = async (req, res, next) => {
+  try {
+    const users = await User.find();
+    res.status(200).json({ users });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const register = async (req, res, next) => {
   try {
@@ -10,8 +61,9 @@ const register = async (req, res, next) => {
     if (existingUser) {
       return res.status(409).json({ message: "Email in use" });
     }
+    const avatar = gravatar.url(email, { default: "identicon" }, true);
 
-    const newUser = new User({ email });
+    const newUser = new User({ email, avatarURL: avatar });
     await newUser.setPassword(password);
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
@@ -24,6 +76,7 @@ const register = async (req, res, next) => {
         token: token,
         email: newUser.email,
         subscription: newUser.subscription,
+        avatar: avatar,
       },
     });
   } catch (error) {
@@ -84,4 +137,6 @@ module.exports = {
   login,
   logout,
   getCurrentUser,
+  getUsers,
+  uploadAvatar,
 };
