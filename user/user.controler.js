@@ -6,13 +6,11 @@ const mimeTypes = require("mime-types");
 const path = require("path");
 const jimp = require("jimp");
 
-const hello = "initial commit";
-
 const uploadAvatar = async (req, res) => {
   try {
-    const userToken = req.body.token;
+    const { token } = req.body;
 
-    if (!userToken) {
+    if (!token) {
       return res.status(401).json({ message: "Not authorized" });
     }
 
@@ -29,7 +27,7 @@ const uploadAvatar = async (req, res) => {
     const avatarURL = `http://localhost:3000/avatars/${filename}`;
 
     const updatedUser = await User.findOneAndUpdate(
-      { token: userToken },
+      { token: token },
       { avatarURL },
       { new: true }
     );
