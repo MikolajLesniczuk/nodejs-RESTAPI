@@ -84,7 +84,7 @@ const register = async (req, res, next) => {
       avatarURL: avatar,
     });
     await sendVerificationToken(newUser.email, newUser.verificationToken);
-    console.log(newUser.verificationToken);
+
     await newUser.setPassword(password);
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
@@ -202,7 +202,7 @@ const resendVerificationHandler = async (req, res, next) => {
     const { email } = req.body;
     const user = await getUser({ email: email });
 
-    if (email) {
+    if (!email) {
       return res.status(400).send({ message: "missing required field email" });
     }
 
