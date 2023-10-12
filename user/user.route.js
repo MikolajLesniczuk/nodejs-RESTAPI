@@ -9,6 +9,8 @@ const {
   getCurrentUser,
   getUsers,
   uploadAvatar,
+  verifyHandler,
+  resendVerificationHandler,
 } = require("./user.controler");
 const path = require("path");
 const multer = require("multer");
@@ -23,5 +25,8 @@ router.post("/logout", authMiddleware, logout);
 router.get("/current", authMiddleware, getCurrentUser);
 router.get("/all", getUsers);
 router.patch("/avatars", upload.single("avatar"), uploadAvatar);
+
+router.get("/verify/:verificationToken", verifyHandler);
+router.post("/verify", resendVerificationHandler);
 
 module.exports = router;
